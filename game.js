@@ -17,12 +17,14 @@ class Slot {
 
 // 게임 클래스 정의
 class Game {
-    constructor() {
+    constructor({ mode = 'standard', manualMode = false } = {}) {
         this.players = []; // 플레이어 목록
         this.slots = []; // 슬롯 목록
         this.currentPlayerIndex = 0; // 현재 턴 플레이어 인덱스
         this.gameState = 'setup'; // 게임 상태: setup(설정), playing(진행 중), ended(종료)
-        console.log('게임 초기화됨. 현재 상태: ', this.gameState); // 게임 초기화 로그
+        this.mode = mode; // 게임 모드: standard 또는 russian
+        this.manualMode = manualMode; // 수동 모드 여부
+        console.log(`게임 초기화됨. 현재 상태: ${this.gameState}, 모드: ${this.mode}, 수동 모드: ${this.manualMode}`); // 게임 초기화 로그
     }
 
     // 플레이어 추가
@@ -40,7 +42,9 @@ class Game {
         let slotCount;
 
         // 플레이어 수에 따른 슬롯 개수 결정
-        if (playerCount < 4) {
+        if (this.mode === 'russian') {
+            slotCount = playerCount; // 러시안 룰렛 모드에서는 플레이어 수만큼 슬롯 생성
+        } else if (playerCount < 4) {
             slotCount = 12;
         } else if (playerCount >= 4 && playerCount <= 8) {
             slotCount = 16;
@@ -49,6 +53,7 @@ class Game {
         }
         console.log('총 슬롯 개수: ', slotCount); // 슬롯 개수 로그
 
+        this.slots = [];
         // 슬롯 객체 생성
         for (let i = 0; i < slotCount; i++) {
             this.slots.push(new Slot(i + 1));
@@ -73,6 +78,11 @@ class Game {
         }
         console.log('플레이어 수 유효성 검사 통과.'); // 유효성 검사 통과 로그
         return null; // 유효성 통과
+    }
+
+    // 번호로 슬롯 찾기 (1 기반)
+    getSlotByNumber(slotNumber) {
+        return this.slots.find(slot => slot.id === slotNumber) || null;
     }
 
     // 다음 턴으로 진행
