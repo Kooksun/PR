@@ -13,17 +13,36 @@ header {
     margin-bottom: 20px;
 }
 
+#setup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 #setup input {
     padding: 10px;
     font-size: 16px;
     width: 300px;
-    margin-right: 10px;
 }
 
 #setup button {
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
+}
+
+.manual-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+}
+
+.manual-mode-toggle input {
+    width: 18px;
+    height: 18px;
 }
 
 #game-board {

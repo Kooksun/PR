@@ -82,6 +82,102 @@ function rotateSlots(boardAngle) {
     });
 }
 
+// 수동 모드일 때 사용자에게 슬롯 선택을 요청
+function promptForManualSlotSelection() {
+    const availableSlots = currentGame.slots.filter(slot => slot.state !== 'full');
+    if (availableSlots.length === 0) {
+        alert('선택할 수 있는 슬롯이 없습니다.');
+        return null;
+    }
+
+    while (true) {
+        const input = prompt(`슬롯 번호를 입력하세요 (1-${currentGame.slots.length})`);
+        if (input === null) {
+            alert('게임을 진행하려면 슬롯 번호를 입력해야 합니다.');
+            continue;
+        }
+
+        const slotNumber = parseInt(input, 10);
+        if (Number.isNaN(slotNumber)) {
+            alert('유효한 숫자를 입력하세요.');
+            continue;
+        }
+
+        if (slotNumber < 1 || slotNumber > currentGame.slots.length) {
+            alert(`1부터 ${currentGame.slots.length} 사이의 숫자를 입력하세요.`);
+            continue;
+        }
+
+        const chosenSlot = currentGame.getSlotByNumber(slotNumber);
+        if (!chosenSlot) {
+            alert('선택한 슬롯을 찾을 수 없습니다. 다시 시도하세요.');
+            continue;
+        }
+
+        if (chosenSlot.state === 'full') {
+            alert('이미 채워진 슬롯입니다. 다른 슬롯을 선택하세요.');
+            continue;
+        }
+
+        return chosenSlot;
+    }
+}
+
+// 선택된 슬롯 처리 공통 로직
+function processSelectedSlot(selectedSlot) {
+    const currentSlotAngleDegrees = (selectedSlot.id - 1) / currentGame.slots.length * 360; // 선택된 슬롯의 현재 각도 (도 단위)
+    const targetAngleDegrees = 90; // 목표 각도 (하단 중앙)
+    const boardRotationAngle = targetAngleDegrees - currentSlotAngleDegrees; // 보드 회전 각도 계산
+    rotateSlots(boardRotationAngle); // 슬롯 회전 애니메이션
+
+    setTimeout(() => {
+        const selectionResult = currentGame.selectSlot(selectedSlot); // 슬롯 선택 결과 처리
+        const slotElement = document.querySelector(`.slot:nth-child(${selectedSlot.id})`); // 선택된 슬롯 요소 가져오기
+
+        if (!slotElement) {
+            console.warn('선택된 슬롯 요소를 찾을 수 없습니다.');
+            return;
+        }
+
+        if (selectionResult.status === 'continue') {
+            console.log('선택된 슬롯 ', selectedSlot.id, '는 비어있었습니다. 게임 계속.'); // 슬롯 선택 결과 로그
+            slotElement.classList.add('full-animation'); // 'full' 애니메이션 클래스 추가
+            slotElement.classList.remove('empty'); // 'empty' 클래스 제거
+            slotElement.classList.add('full'); // 'full' 클래스 추가
+            const currentPlayerNameElement = document.querySelector('#player-turn .current-player');
+            if (currentPlayerNameElement) {
+                currentPlayerNameElement.classList.add('shake-animation'); // 흔들림 애니메이션 추가
+                currentPlayerNameElement.addEventListener('animationend', () => {
+                    currentPlayerNameElement.classList.remove('shake-animation'); // 애니메이션 종료 후 클래스 제거
+                }, { once: true });
+            }
+
+            // 애니메이션 완료 후 다음 턴 진행
+            slotElement.addEventListener('transitionend', () => {
+                currentGame.nextTurn(); // 다음 턴으로 진행
+                renderPlayerTurn(currentGame); // 플레이어 턴 렌더링
+                playTurn(); // 다음 턴 시작
+            }, { once: true });
+
+        } else if (selectionResult.status === 'reselect') {
+            console.log('선택된 슬롯 ', selectedSlot.id, '는 이미 채워져 있습니다. 재선택.'); // 재선택 로그
+            playTurn(); // 현재는 턴 재실행
+        } else if (selectionResult.status === 'gameover') {
+            console.log('선택된 슬롯 ', selectedSlot.id, '는 해적 슬롯입니다! 게임 오버!'); // 게임 오버 로그
+            slotElement.classList.remove('empty'); // 'empty' 클래스 제거
+            slotElement.classList.add('pirate'); // 해적 슬롯 공개 (빨간색으로 변경)
+            const currentPlayerNameElement = document.querySelector('#player-turn .current-player');
+            if (currentPlayerNameElement) {
+                currentPlayerNameElement.classList.add('shake-animation'); // 흔들림 애니메이션 추가
+                currentPlayerNameElement.addEventListener('animationend', () => {
+                    currentPlayerNameElement.classList.remove('shake-animation'); // 애니메이션 종료 후 클래스 제거
+                }, { once: true });
+            }
+            showLoserPopup(selectionResult.loser.name); // 패배 팝업 표시
+        }
+    }, 1000); // 회전 애니메이션을 위한 짧은 지연
+}
+
 // 패배 팝업 표시
 function showLoserPopup(loserName) {
     console.log(loserName, '님 패배 팝업 표시.'); // 패배 팝업 표시 로그
@@ -100,72 +196,45 @@ function hideLoserPopup() {
 
 // 턴 진행 로직
 function playTurn() {
-    showThinkingAnimation(currentGame.players[currentGame.currentPlayerIndex]); // 생각 중 애니메이션 표시
+    if (!currentGame || currentGame.gameState !== 'playing') {
+        return;
+    }
 
-            setTimeout(() => {
-                hideThinkingAnimation(); // 생각 중 애니메이션 숨기기
-                const selectedSlot = currentGame.selectRandomSlot(); // 무작위 슬롯 선택
-                const currentSlotAngleDegrees = (selectedSlot.id - 1) / currentGame.slots.length * 360; // 선택된 슬롯의 현재 각도 (도 단위)
-                const targetAngleDegrees = 90; // 목표 각도 (하단 중앙)
-                const boardRotationAngle = targetAngleDegrees - currentSlotAngleDegrees; // 보드 회전 각도 계산
-                rotateSlots(boardRotationAngle); // 슬롯 회전 애니메이션
-    
-                setTimeout(() => {
-                    const selectionResult = currentGame.selectSlot(selectedSlot); // 슬롯 선택 결과 처리
-                    const slotElement = document.querySelector(`.slot:nth-child(${selectedSlot.id})`); // 선택된 슬롯 요소 가져오기
-    
-                    if (selectionResult.status === 'continue') {
-                        console.log('선택된 슬롯 ', selectedSlot.id, '는 비어있었습니다. 게임 계속.'); // 슬롯 선택 결과 로그
-                        slotElement.classList.add('full-animation'); // 'full' 애니메이션 클래스 추가
-                        slotElement.classList.remove('empty'); // 'empty' 클래스 제거
-                        slotElement.classList.add('full'); // 'full' 클래스 추가
-                        const currentPlayerNameElement = document.querySelector('#player-turn .current-player');
-                        if (currentPlayerNameElement) {
-                            currentPlayerNameElement.classList.add('shake-animation'); // 흔들림 애니메이션 추가
-                            currentPlayerNameElement.addEventListener('animationend', () => {
-                                currentPlayerNameElement.classList.remove('shake-animation'); // 애니메이션 종료 후 클래스 제거
-                            }, { once: true });
-                        }
+    const currentPlayer = currentGame.players[currentGame.currentPlayerIndex];
+    showThinkingAnimation(currentPlayer); // 생각 중 애니메이션 표시
 
-                        // 애니메이션 완료 후 다음 턴 진행
-                        slotElement.addEventListener('transitionend', () => {
-                            currentGame.nextTurn(); // 다음 턴으로 진행
-                            renderPlayerTurn(currentGame); // 플레이어 턴 렌더링
-                            playTurn(); // 다음 턴 시작
-                        }, { once: true });
+    setTimeout(() => {
+        hideThinkingAnimation(); // 생각 중 애니메이션 숨기기
 
-                    } else if (selectionResult.status === 'reselect') {
-                        console.log('선택된 슬롯 ', selectedSlot.id, '는 이미 채워져 있습니다. 재선택.'); // 재선택 로그
-                        playTurn(); // 현재는 턴 재실행
-                    } else if (selectionResult.status === 'gameover') {
-                        console.log('선택된 슬롯 ', selectedSlot.id, '는 해적 슬롯입니다! 게임 오버!'); // 게임 오버 로그
-                        slotElement.classList.remove('empty'); // 'empty' 클래스 제거
-                        slotElement.classList.add('pirate'); // 해적 슬롯 공개 (빨간색으로 변경)
-                        const currentPlayerNameElement = document.querySelector('#player-turn .current-player');
-                        if (currentPlayerNameElement) {
-                            currentPlayerNameElement.classList.add('shake-animation'); // 흔들림 애니메이션 추가
-                            currentPlayerNameElement.addEventListener('animationend', () => {
-                                currentPlayerNameElement.classList.remove('shake-animation'); // 애니메이션 종료 후 클래스 제거
-                            }, { once: true });
-                        }
-                        showLoserPopup(selectionResult.loser.name); // 패배 팝업 표시
-                    }
-                }, 1000); // 회전 애니메이션을 위한 짧은 지연
-    
-            }, 2000); // 생각 시간
+        let selectedSlot = null;
+        if (currentGame.manualMode) {
+            console.log('수동 모드에서 슬롯 선택을 사용자에게 요청합니다.');
+            selectedSlot = promptForManualSlotSelection();
+        } else {
+            selectedSlot = currentGame.selectRandomSlot(); // 무작위 슬롯 선택
+        }
+
+        if (!selectedSlot) {
+            console.warn('선택된 슬롯이 없어 턴을 종료합니다.');
+            return;
+        }
+
+        processSelectedSlot(selectedSlot);
+    }, 2000); // 생각 시간
 }
 
 // DOMContentLoaded 이벤트 리스너
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM 콘텐츠 로드 완료. 게임 설정 준비.'); // DOM 로드 완료 로그
     const startGameButton = document.getElementById('start-game'); // 게임 시작 버튼
+    const startRussianRouletteButton = document.getElementById('start-russian-roulette'); // 러시안 룰렛 버튼
     const playerNamesInput = document.getElementById('player-names'); // 플레이어 이름 입력 필드
+    const manualModeCheckbox = document.getElementById('manual-mode'); // 수동 모드 체크박스
     const errorElement = document.getElementById('error-message'); // 오류 메시지 표시 요소
 
-    // 게임 시작 버튼 클릭 이벤트
-    startGameButton.addEventListener('click', () => {
-        console.log('게임 시작 버튼 클릭됨.'); // 게임 시작 버튼 클릭 로그
-        currentGame = new Game(); // 새 게임 인스턴스 생성
+    function initializeGame(mode) {
+        console.log(`${mode === 'russian' ? '러시안 룰렛' : '기본'} 모드 게임 시작 버튼 클릭됨.`);
+        currentGame = new Game({ mode, manualMode: manualModeCheckbox.checked }); // 새 게임 인스턴스 생성
         const playerNames = playerNamesInput.value; // 플레이어 이름 가져오기
 
         currentGame.addPlayers(playerNames); // 플레이어 추가
@@ -174,16 +243,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (errorMessage) {
             errorElement.textContent = errorMessage; // 오류 메시지 표시
             console.warn('게임 시작 실패: ', errorMessage); // 게임 시작 실패 로그
-        } else {
-            errorElement.textContent = ''; // 오류 메시지 초기화
-            currentGame.createSlots(); // 슬롯 생성
-            renderBoard(currentGame); // 게임 보드 렌더링
-            renderPlayerTurn(currentGame); // 플레이어 턴 렌더링
-            
-            playTurn(); // 게임 루프 시작
-            console.log('게임 시작 성공. 게임 상태: playing'); // 게임 시작 성공 로그
+            return;
         }
-    });
+
+        errorElement.textContent = ''; // 오류 메시지 초기화
+        currentGame.createSlots(); // 슬롯 생성
+        currentGame.gameState = 'playing'; // 게임 상태 업데이트
+        renderBoard(currentGame); // 게임 보드 렌더링
+        renderPlayerTurn(currentGame); // 플레이어 턴 렌더링
+
+        playTurn(); // 게임 루프 시작
+        console.log(`게임 시작 성공. 게임 상태: ${currentGame.gameState}, 모드: ${currentGame.mode}, 수동 모드: ${currentGame.manualMode}`);
+    }
+
+    // 게임 시작 버튼 클릭 이벤트
+    startGameButton.addEventListener('click', () => initializeGame('standard'));
+
+    // 러시안 룰렛 모드 시작 버튼 클릭 이벤트
+    startRussianRouletteButton.addEventListener('click', () => initializeGame('russian'));
 
     const closeButton = document.querySelector('.close-button'); // 팝업 닫기 버튼
     const resetGameButton = document.getElementById('reset-game-button'); // 게임 재설정 버튼
