@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Roulette</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Pirate Roulette</h1>
+        <div id="setup">
+            <input type="text" id="player-names" placeholder="Enter player names, separated by commas">
+            <button id="start-game">Start Game</button>
+        </div>
+        <div id="error-message" style="color: red; margin-top: 10px;"></div>
+    </header>
+    <main>
+        <div id="game-board"></div>
+    </main>
+    <footer>
+        <div id="player-turn"></div>
+        <div id="thinking-spinner" style="display: none;"></div>
+    </footer>
+
+    <div id="game-over-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="game-over-message"></h2>
+            <button id="reset-game-button">Close</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+    <script src="ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# IDEs and other system files
+.DS_Store
+Thumbs.db
+
+# Gemini specific files
+.gemini/
+.specify/

@@ -31,7 +31,8 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+*   **Simplicity**: Does the proposed solution adhere to the 'Be simple' principle (one HTML, one CSS, two JS files)?
+*   **Simplicity**: Are comments and log messages in Korean?
 
 ## Project Structure
 

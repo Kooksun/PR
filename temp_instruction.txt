@@ -1,0 +1,41 @@
+Name: Pirate Roullette Webapp
+Description: A web application that 여러 참가자가 돌아가면서 임의의 슬롯을 선택하고 당첨자를 결정하는 게임. 자세한 내용은 스펙문서에서 정의한다.
+Point: Be simple - one html, one css, two js of game logic and ui logic. Korean comments in js files. Korean log messages in console.
+
+Spces.
+1. Game logic
+1.1 Setup stage
+- players can be 2~12, with comma separated names input
+- ready empty slots: if players < 4, 12 slots; if players 4~8, 16 slots; if players 9~12, 20 slots
+- make ONE random slot as "pirate" slot
+1.2 Play stage
+- players take turns to select slots. seletion is random in slot's size
+- if selected slot is "pirate" slot, player loses and game ends
+- if selected slot is empty, set the slot as "full". and continue to next player's turn
+- if selected slot is already "full", the player must select again
+1.3 End stage
+- when a player selects the "pirate" slot, show a message in modal popup style that the player has lost
+- if popup is closed, reset the game to setup stage
+1.4 Turn order
+- players take turns in the order of their names input
+- after the last player, turn goes back to the first player
+- in each turn, wait 2 secs (think), rotate the slots (animation) to the selected slot be in 6 clock position for short time (< 1sec), then show selecting animation. 
+
+
+2. Screens
+- header : no title, input fields for player names, and start button
+- main : a big circle showing slots in a circular layout with slots numbered from 1 to total slots and following below design:, 
+  - empty slots as empty box
+  - full slots as gray-blue box
+  - pirate slot as red box (only revealed when selected)
+- footer : 참가자들의 이름이 적당한 간격으로 나열된다. 현재 턴인 참가자의 이름이 가운데 위치하며 다른 이름들보다 크게 강조 표시된다.
+
+3. Animaions
+- 턴이 변경되면 footer의 참가자 이름들이 부드럽게 이동하여 현재 턴인 참가자의 이름이 가운데에 오도록 한다.
+- 잠시 생각하는 동안(2초) 참가자 이름 옆에 로딩 스피너가 표시된다.
+- 선택한 슬롯이 6시 위치에 오도록 슬롯을 회전시키는 애니메이션이 시작된다.
+- 만약 선택한 슬롯이 빈 슬롯인 경우, 참가자의 이름이 잠깐 상하로 흔들리고, 빈 슬롯은 full 슬롯으로 변경되는 애니메이션이 시작된다.
+- 만약 선택한 슬롯이 이미 채워진 슬롯인 경우, 다시 잠시 생각하고(1초, 로딩스피너 표시) 다른 슬롯을 선택하도록 한다.
+- 만약 선택한 슬롯이 해적 슬롯인 경우, 참가자의 이름이 좌우로 흔들리고, 해적 슬롯이 빨간색으로 변경되는 애니메이션이 시작된다. 그런 다음 모달 팝업이 표시된다.
+
+  
