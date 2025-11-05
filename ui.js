@@ -1,6 +1,7 @@
 // UI 조작 로직
 
 let currentGame; // 현재 게임 인스턴스
+let manualMode = false; // 수동 모드 상태
 
 // 게임 보드를 렌더링하는 함수
 function renderBoard(game) {
@@ -90,11 +91,13 @@ function promptForManualSlotSelection() {
         return null;
     }
 
+    const currentPlayerName = currentGame.players[currentGame.currentPlayerIndex].name;
+
     while (true) {
-        const input = prompt(`슬롯 번호를 입력하세요 (1-${currentGame.slots.length})`);
+        const input = prompt(`${currentPlayerName}님, 슬롯 번호를 입력하세요 (1-${currentGame.slots.length})`);
         if (input === null) {
-            alert('게임을 진행하려면 슬롯 번호를 입력해야 합니다.');
-            continue;
+            console.log('사용자가 슬롯 선택을 취소했습니다. 무작위 슬롯을 선택합니다.');
+            return null; // 사용자가 취소하면 null 반환
         }
 
         const slotNumber = parseInt(input, 10);
@@ -210,6 +213,9 @@ function playTurn() {
         if (currentGame.manualMode) {
             console.log('수동 모드에서 슬롯 선택을 사용자에게 요청합니다.');
             selectedSlot = promptForManualSlotSelection();
+            if (selectedSlot === null) { // 사용자가 취소한 경우
+                selectedSlot = currentGame.selectRandomSlot(); // 무작위 슬롯 선택
+            }
         } else {
             selectedSlot = currentGame.selectRandomSlot(); // 무작위 슬롯 선택
         }
@@ -229,12 +235,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const startGameButton = document.getElementById('start-game'); // 게임 시작 버튼
     const startRussianRouletteButton = document.getElementById('start-russian-roulette'); // 러시안 룰렛 버튼
     const playerNamesInput = document.getElementById('player-names'); // 플레이어 이름 입력 필드
-    const manualModeCheckbox = document.getElementById('manual-mode'); // 수동 모드 체크박스
+    const toggleManualModeButton = document.getElementById('toggle-manual-mode'); // 수동 모드 토글 버튼
     const errorElement = document.getElementById('error-message'); // 오류 메시지 표시 요소
+
+    // 초기 버튼 상태 설정
+    toggleManualModeButton.textContent = `Manual Mode: ${manualMode ? 'ON' : 'OFF'}`;
+    if (manualMode) {
+        toggleManualModeButton.classList.add('active');
+    } else {
+        toggleManualModeButton.classList.remove('active');
+    }
 
     function initializeGame(mode) {
         console.log(`${mode === 'russian' ? '러시안 룰렛' : '기본'} 모드 게임 시작 버튼 클릭됨.`);
-        currentGame = new Game({ mode, manualMode: manualModeCheckbox.checked }); // 새 게임 인스턴스 생성
+        currentGame = new Game({ mode, manualMode: manualMode }); // 새 게임 인스턴스 생성
         const playerNames = playerNamesInput.value; // 플레이어 이름 가져오기
 
         currentGame.addPlayers(playerNames); // 플레이어 추가
@@ -261,6 +275,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 러시안 룰렛 모드 시작 버튼 클릭 이벤트
     startRussianRouletteButton.addEventListener('click', () => initializeGame('russian'));
+
+    // 수동 모드 토글 버튼 클릭 이벤트
+    toggleManualModeButton.addEventListener('click', () => {
+        manualMode = !manualMode; // manualMode 상태 토글
+        toggleManualModeButton.textContent = `Manual Mode: ${manualMode ? 'ON' : 'OFF'}`; // 버튼 텍스트 업데이트
+        toggleManualModeButton.classList.toggle('active', manualMode); // 'active' 클래스 토글
+        console.log('수동 모드:', manualMode ? '활성화' : '비활성화'); // 콘솔 로그
+    });
 
     const closeButton = document.querySelector('.close-button'); // 팝업 닫기 버튼
     const resetGameButton = document.getElementById('reset-game-button'); // 게임 재설정 버튼
