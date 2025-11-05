@@ -197,3 +197,141 @@ footer {
     cursor: pointer;
     margin-top: 20px;
 }
+
+/* Walk the Plank Animation */
+#walk-the-plank-animation {
+    display: none; /* Initially hidden */
+    position: relative;
+    width: 300px;
+    height: 200px;
+    margin: 20px auto;
+    border: 2px solid #333;
+    overflow: hidden;
+    background-color: #87CEEB; /* Sky blue */
+}
+
+.sun {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    background-color: yellow;
+    border-radius: 50%;
+}
+
+.cloud {
+    position: absolute;
+    background: white;
+    border-radius: 20px;
+    animation: move-clouds 10s linear infinite;
+}
+
+.cloud.cloud1 {
+    top: 20px;
+    left: -50px;
+    width: 50px;
+    height: 20px;
+}
+
+.cloud.cloud2 {
+    top: 40px;
+    left: -100px;
+    width: 70px;
+    height: 30px;
+    animation-delay: -5s;
+}
+
+.plank {
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+    width: 230px; /* Adjusted width */
+    height: 20px;
+    background-color: #8B4513; /* SaddleBrown */
+}
+
+.water {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background-color: #00008B; /* DarkBlue */
+}
+
+.wave {
+    position: absolute;
+    top: -10px;
+    left: -50%;
+    width: 200%;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: wave-animation 3s ease-in-out infinite;
+}
+
+.wave.wave2 {
+    animation-delay: -1.5s;
+}
+
+.stick-figure {
+    position: absolute;
+    bottom: 80px; /* On top of the plank */
+    left: 10px;
+    width: 20px;
+    height: 40px;
+    background-color: black;
+}
+
+.stick-figure::before { /* Head */
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: black;
+}
+
+.stick-figure.walk-and-fall {
+    animation: walk-and-fall 4s ease-in-out forwards;
+}
+
+@keyframes move-clouds {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(400px);
+    }
+}
+
+@keyframes wave-animation {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(5px);
+    }
+}
+
+@keyframes walk-and-fall {
+    0% {
+        left: 10px;
+        transform: translateY(0);
+    }
+    50% {
+        left: 230px; /* Walk to the end of the plank */
+        transform: translateY(0);
+    }
+    70% {
+        left: 230px;
+        transform: translateY(100px) rotate(90deg); /* Fall down */
+    }
+    100% {
+        left: 230px;
+        transform: translateY(100px) rotate(90deg); /* Stay at the bottom */
+    }
+}

@@ -186,15 +186,29 @@ function showLoserPopup(loserName) {
     console.log(loserName, '님 패배 팝업 표시.'); // 패배 팝업 표시 로그
     const modal = document.getElementById('game-over-modal');
     const messageElement = document.getElementById('game-over-message');
+    const animationContainer = document.getElementById('walk-the-plank-animation');
+    const stickFigure = animationContainer.querySelector('.stick-figure');
+
     messageElement.textContent = `${loserName} 님이 해적을 뽑았습니다! 게임 오버!`; // 메시지 설정
     modal.style.display = 'block'; // 모달 표시
+
+    // 애니메이션 시작
+    animationContainer.style.display = 'block';
+    stickFigure.classList.add('walk-and-fall');
 }
 
 // 패배 팝업 숨기기
 function hideLoserPopup() {
     console.log('패배 팝업 숨기기.'); // 패배 팝업 숨기기 로그
     const modal = document.getElementById('game-over-modal');
+    const animationContainer = document.getElementById('walk-the-plank-animation');
+    const stickFigure = animationContainer.querySelector('.stick-figure');
+
     modal.style.display = 'none'; // 모달 숨기기
+
+    // 애니메이션 리셋
+    animationContainer.style.display = 'none';
+    stickFigure.classList.remove('walk-and-fall');
 }
 
 // 턴 진행 로직
