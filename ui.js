@@ -55,6 +55,11 @@ function renderPlayerTurn(game) {
     const playerTurnElement = document.getElementById('player-turn');
     playerTurnElement.innerHTML = ''; // 기존 내용 초기화
 
+    if (game.players.length === 0) {
+        console.log('플레이어가 없어 플레이어 턴 표시를 초기화합니다.');
+        return;
+    }
+
     game.players.forEach((player, index) => {
         const playerNameSpan = document.createElement('span');
         playerNameSpan.textContent = player.name;
